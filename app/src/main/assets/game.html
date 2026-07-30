@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Kids Games</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:sans-serif;background:#FFF5F5}
+#app{width:100vw;height:100vh;position:relative;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(135deg,#FFF5F5,#FFE8E8)}
+.page{display:none;width:100%;height:100%;position:absolute;top:0;left:0;overflow:hidden}
+.page.active{display:flex;flex-direction:column}
+/* Home */
+#home{justify-content:center;align-items:center;gap:3vmin;padding:4vmin}
+#home h1{font-size:8vmin;color:#FF6B9D;text-align:center;text-shadow:0 2px 4px rgba(255,107,157,0.3);margin-bottom:2vmin;animation:titleFloat 3s ease-in-out infinite}
+@keyframes titleFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-1vmin)}}
+.home-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:3vmin;width:100%;max-width:600px;padding:1vmax}
+.game-card{aspect-ratio:1;border-radius:5vmin;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;box-shadow:0 4px 20px rgba(255,107,157,0.15);cursor:pointer;transition:transform .2s;position:relative;border:3px solid transparent}
+.game-card:active{transform:scale(0.92)}
+.game-card .icon{font-size:10vmin;line-height:1}
+.game-card .stars{font-size:2.5vmin;margin-top:1vmin;letter-spacing:0.3vmin}
+.game-card .num{position:absolute;top:-1vmin;right:-1vmin;background:#FF6B9D;color:#fff;border-radius:50%;width:5vmin;height:5vmin;display:flex;align-items:center;justify-content:center;font-size:3vmin;font-weight:bold;box-shadow:0 2px 8px rgba(255,107,157,0.4)}
+.game-card:hover{border-color:#FF6B9D;transform:translateY(-2px)}
+
+/* Header */
+#game-header{display:flex;align-items:center;padding:2vmin 3vmin;background:linear-gradient(135deg,#FF6B9D,#FF8E53);color:#fff;flex-shrink:0;z-index:100;border-radius:0 0 3vmin 3vmin;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+.header-btn{width:9vmin;height:9vmin;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:5vmin;cursor:pointer;transition:background .2s;flex-shrink:0}
+.header-btn:active{background:rgba(255,255,255,0.4)}
+.header-level{flex:1;text-align:center;font-size:4.5vmin;font-weight:bold;display:flex;align-items:center;justify-content:center;gap:1vmin}
+.header-level .star-icon{font-size:4vmin}
+#energy-bar{width:20vmin;height:3vmin;background:rgba(255,255,255,0.3);border-radius:1.5vmin;overflow:hidden;margin:0 2vmin;flex-shrink:0}
+#energy-fill{height:100%;width:0%;background:linear-gradient(90deg,#FFD93D,#FF6B9D);border-radius:1.5vmin;transition:width .5s}
+.header-empty{width:9vmin;flex-shrink:0}
+
+/* Game area */
+#game-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:2vmin}
+.game-scene{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+/* Transition overlay */
+#transition-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#FF6B9D,#FFD93D);z-index:9999;opacity:0;pointer-events:none;transition:opacity .6s}
+#transition-overlay.show{opacity:1;pointer-events:auto}
+/* Celebration overlay */
+#celebration-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9998;pointer-events:none;overflow:hidden;display:none}
+#celebration-overlay.show{display:block}
+
+/* Particles canvas */
+#particles-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:9997;pointer-events:none;display:none}
+
+/* Hint finger */
+#hint-finger{position:fixed;z-index:9996;pointer-events:none;font-size:12vmin;display:none;animation:fingerPress 1s ease-in-out infinite}
+@keyframes fingerPress{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(2vmin) scale(1.1)}}
+
+/* breathing pulse */
+@keyframes breathe{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
+.breathe{animation:breathe 1.2s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5%)}40%{transform:translateX(5%)}60%{transform:translateX(-5%)}80%{transform:translateX(5%)}}
+.shake{animation:shake 0.4s ease-in-out}
+@keyframes pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.pop{animation:pop .3s ease-out}
+@keyframes flyIn{0%{transform:translateY(-100%) scale(0.5);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+.fly-in{animation:flyIn .5s ease-out}
+
+/* Common game styles */
+.option-btn{display:flex;align-items:center;justify-content:center;border-radius:3vmin;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.08);cursor:pointer;transition:transform .15s;font-size:8vmin}
+.option-btn:active{transform:scale(0.9)}
+.option-btn.disabled{pointer-events:none;opacity:0.6}
+.option-btn.correct{animation:pop .4s ease-out;background:#e8ffe8}
+.option-btn.wrong{animation:shake .4s ease-in-out}
+
+/* Celebration styles */
+.confetti-piece{position:absolute;width:2vmin;height:2vmin;opacity:0.9;animation:confettiFall linear forwards}
+@keyframes confettiFall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+.star-particle{position:absolute;font-size:4vmin;animation:starRise 2s ease-out forwards;pointer-events:none}
+@keyframes starRise{0%{transform:translateY(0) scale(0) rotate(0deg);opacity:1}100%{transform:translateY(-50vh) scale(1.5) rotate(360deg);opacity:0}}
+.firework{position:absolute;width:0;height:0;border-radius:50%;animation:fireworkExplode 1s ease-out forwards}
+@keyframes fireworkExplode{0%{width:0;height:0;opacity:1}100%{width:30vmin;height:30vmin;opacity:0}}
+
+/* Transition backgrounds */
+.bg-gradient-1{background:linear-gradient(135deg,#a8edea,#fed6e3)}
+.bg-gradient-2{background:linear-gradient(135deg,#d4fc79,#96e6a1)}
+.bg-gradient-3{background:linear-gradient(135deg,#fbc2eb,#a6c1ee)}
+.bg-gradient-4{background:linear-gradient(135deg,#fdcbf1,#e6dee9)}
+.bg-gradient-5{background:linear-gradient(135deg,#a1c4fd,#c2e9fb)}
+.bg-gradient-6{background:linear-gradient(135deg,#f6d365,#fda085)}
+.bg-gradient-7{background:linear-gradient(135deg,#89f7fe,#66a6ff)}
+.bg-gradient-8{background:linear-gradient(135deg,#f093fb,#f5576c)}
+.bg-gradient-9{background:linear-gradient(135deg,#4facfe,#00f2fe)}
+.bg-gradient-10{background:linear-gradient(135deg,#fa709a,#fee140)}
+
+/* Game specific styles */
+/* G1: Color Sort */
+.color-item{width:15vmin;height:15vmin;border-radius:50%;border:3px solid #ddd;cursor:pointer;position:relative;transition:transform .2s;display:flex;align-items:center;justify-content:center;font-size:8vmin}
+.color-item:active{transform:scale(0.9)}
+.color-plate{width:30vmin;height:30vmin;border:4px dashed #ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10vmin;position:relative;transition:all .3s;background:#fff}
+.color-plate.glow{box-shadow:0 0 30px rgba(255,107,157,0.4)}
+
+/* G2: Animal Shadow */
+.shadow-area{flex:0 0 30%;display:flex;align-items:center;justify-content:center;min-height:20vmin}
+.shadow-area .shadow-char{font-size:18vmin;filter:brightness(0)contrast(100%);opacity:0.8}
+.shadow-area .shadow-char.colorful{filter:none;opacity:1;animation:pop .5s ease-out}
+.animal-options{flex:1;display:flex;flex-wrap:wrap;gap:2vmin;align-items:center;justify-content:center;padding:2vmin}
+
+/* G3: Memory Cards */
+.memory-grid{display:grid;gap:1.5vmin;justify-content:center}
+.memory-card{width:14vmin;height:14vmin;border-radius:2vmin;background:linear-gradient(135deg,#FFD93D,#FF6B9D);display:flex;align-items:center;justify-content:center;font-size:7vmin;cursor:pointer;transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.memory-card.flipped{background:#fff;box-shadow:0 0 15px rgba(0,200,0,0.3)}
+.memory-card.highlight{box-shadow:0 0 20px rgba(255,107,157,0.6);transform:scale(1.05)}
+.memory-card.matched{background:#e8ffe8;border:2px solid #4CAF50}
+.memory-card.error{border:2px solid #ff4444;animation:shake .3s}
+.memory-card .card-back{font-size:4vmin;color:rgba(255,255,255,0.7)}
+
+/* G4: Spot Difference */
+.diff-scene{display:flex;gap:2vmin;width:100%;justify-content:center;align-items:center}
+.diff-side{flex:1;display:grid;gap:1px;background:#eee;border:2px solid #ddd;border-radius:2vmin;overflow:hidden;position:relative;max-width:45%}
+.diff-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#fff;font-size:5vmin;cursor:pointer;position:relative;transition:background .2s}
+.diff-cell:active{background:#f0f0f0}
+.diff-cell.found{background:#c8ffc8}
+.diff-cell.found::after{content:'✅';position:absolute;font-size:3vmin;top:-1vmin;right:-1vmin}
+.diff-marker{position:absolute;border:3px dashed red;border-radius:50%;pointer-events:none;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.loupe{font-size:6vmin;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;pointer-events:none}
+
+/* G5: Maze */
+.maze-container{display:flex;flex-direction:column;align-items:center;gap:2vmin;width:100%}
+.maze-grid{display:grid;gap:2px;background:#ddd;border-radius:1vmin;overflow:hidden}
+.maze-cell{width:8vmin;height:8vmin;display:flex;align-items:center;justify-content:center;font-size:5vmin;transition:background .2s}
+.maze-wall{background:#8B7355}
+.maze-path{background:#fff}
+.maze-start{background:#90EE90}
+.maze-end{background:#FFB6C1}
+.maze-player{background:#87CEEB;animation:mazePulse 1s ease-in-out infinite}
+@keyframes mazePulse{0%,100%{transform:scale(1)}50%{transform:scale(0.9)}}
+.maze-dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:1vmin;width:60%;max-width:300px}
+.maze-dpad-btn{aspect-ratio:1;border-radius:2vmin;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;font-size:8vmin;cursor:pointer;border:none;transition:background .15s}
+.maze-dpad-btn:active{background:#f0f0f0}
+.maze-dpad-empty{visibility:hidden}
+
+/* G6: Shape Puzzle */
+.puzzle-container{display:flex;flex-direction:column;align-items:center;gap:2vmin;width:100%}
+.puzzle-target{position:relative;width:70%;max-width:350px;aspect-ratio:1;border:3px dashed #ccc;border-radius:3vmin;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.5)}
+.puzzle-slot{position:absolute;border:2px dashed #ff6b9d;border-radius:2vmin;display:flex;align-items:center;justify-content:center;font-size:6vmin;background:rgba(255,107,157,0.08);transition:all .3s}
+.puzzle-slot.hover{border-color:#4CAF50;background:rgba(76,175,80,0.1)}
+.puzzle-slot.filled{border-color:#4CAF50;background:rgba(76,175,80,0.15)}
+.puzzle-pieces{display:flex;flex-wrap:wrap;gap:2vmin;justify-content:center;padding:2vmin}
+.puzzle-piece{width:16vmin;height:16vmin;border-radius:2vmin;display:flex;align-items:center;justify-content:center;font-size:8vmin;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.1);cursor:grab;transition:transform .15s}
+.puzzle-piece:active{transform:scale(1.1);cursor:grabbing;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.puzzle-piece.placed{opacity:0.3;pointer-events:none}
+
+/* G7: Whack-a-Mole */
+.whack-grid{display:grid;gap:2vmin;justify-content:center;padding:2vmin}
+.whack-hole{width:16vmin;height:16vmin;border-radius:50%;background:radial-gradient(circle,#8B4513,#654321);display:flex;align-items:center;justify-content:center;font-size:9vmin;cursor:pointer;position:relative;overflow:hidden;box-shadow:inset 0 4px 10px rgba(0,0,0,0.3)}
+.whack-hole .animal{position:absolute;bottom:0;transform:translateY(100%);transition:transform .2s ease-out;font-size:9vmin}
+.whack-hole .animal.up{transform:translateY(0)}
+.whack-hole .animal.bomb{font-size:8vmin}
+.whack-stats{display:flex;justify-content:space-between;width:100%;padding:0 4vmin;font-size:5vmin}
+.whack-stats span{display:flex;align-items:center;gap:1vmin}
+
+/* G8: Pattern Detective */
+.pattern-container{display:flex;flex-direction:column;align-items:center;gap:3vmin;width:100%;padding:2vmin}
+.pattern-sequence{display:flex;gap:1.5vmin;flex-wrap:wrap;justify-content:center}
+.pattern-item{width:12vmin;height:12vmin;border-radius:2vmin;display:flex;align-items:center;justify-content:center;font-size:7vmin;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.pattern-item.unknown{background:#f0f0f0;font-size:6vmin;border:2px dashed #ccc}
+.pattern-item.filled{border:2px solid #4CAF50;background:#e8ffe8}
+.pattern-options{display:flex;gap:2vmin;flex-wrap:wrap;justify-content:center}
+.highlight-flash{animation:highlightFlash .5s ease}
+@keyframes highlightFlash{0%,100%{box-shadow:0 0 0 rgba(255,215,0,0)}50%{box-shadow:0 0 20px rgba(255,215,0,0.6)}}
+
+/* G9: Fruit Catch */
+.fruit-game{position:relative;width:100%;height:100%;overflow:hidden}
+.fruit-pan{position:absolute;bottom:2vmin;width:25vmin;height:10vmin;font-size:8vmin;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#555,#333);border-radius:50% 50% 5vmin 5vmin;transition:none;z-index:10}
+.fruit-item{position:absolute;font-size:7vmin;transition:top .05s linear;z-index:5;pointer-events:none}
+.fruit-bomb{font-size:7vmin}
+.fruit-score{position:absolute;top:2vmin;left:2vmin;display:flex;align-items:center;gap:1vmin;font-size:4vmin;z-index:20}
+
+/* G10: Listen and Find */
+.listen-container{display:flex;flex-direction:column;align-items:center;gap:3vmin;width:100%;padding:2vmin}
+.listen-speaker{width:20vmin;height:20vmin;border-radius:50%;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.1);display:flex;align-items:center;justify-content:center;font-size:10vmin;position:relative;margin:2vmin 0}
+.sound-wave{position:absolute;width:100%;height:100%;border-radius:50%;border:3px solid #FF6B9D;opacity:0;animation:waveExpand 1.5s ease-out infinite}
+@keyframes waveExpand{0%{transform:scale(0.8);opacity:0.6}100%{transform:scale(1.5);opacity:0}}
+.sound-wave:nth-child(2){animation-delay:.5s}
+.sound-wave:nth-child(3){animation-delay:1s}
+.replay-btn{width:10vmin;height:10vmin;border-radius:50%;background:#FFD93D;display:flex;align-items:center;justify-content:center;font-size:5vmin;cursor:pointer;box-shadow:0 2px 10px rgba(255,217,61,0.4)}
+.listen-animals{display:flex;flex-wrap:wrap;gap:2vmin;justify-content:center}
+
+@media(min-aspect-ratio:1/1){
+  .home-grid{grid-template-columns:repeat(5,1fr)}
+  .play-area{flex-direction:row}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="home" class="page active">
+    <h1>🎮</h1>
+    <div class="home-grid" id="home-grid"></div>
+  </div>
+  <div id="game-page" class="page">
+    <div id="game-header">
+      <div class="header-btn" id="btn-back">🏠</div>
+      <div class="header-level"><span class="star-icon">⭐</span> <span id="level-display">1</span></div>
+      <div id="energy-bar"><div id="energy-fill"></div></div>
+      <div class="header-empty"></div>
+    </div>
+    <div id="game-area"></div>
+  </div>
+</div>
+<div id="transition-overlay"></div>
+<div id="celebration-overlay"></div>
+<canvas id="particles-canvas"></canvas>
+<div id="hint-finger">👆</div>
+
+<script>
+// ====================== AUDIO ENGINE (Web Audio) ======================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+function getAudioCtx() {
+  if(!audioCtx) audioCtx = new AudioCtx();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq, type, duration, vol=0.15) {
+  try{
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  }catch(e){}
+}
+function playCorrect() {
+  playTone(523.25, 'sine', 0.1, 0.12);
+  setTimeout(()=>playTone(659.25, 'sine', 0.1, 0.12), 100);
+  setTimeout(()=>playTone(783.99, 'sine', 0.15, 0.12), 200);
+}
+function playWrong() {
+  playTone(200, 'sine', 0.15, 0.08);
+}
+function playAnimalSound(animal, duration=0.5) {
+  const sounds = {
+    '🐱': {freq:800,type:'sawtooth'}, '🐶':{freq:400,type:'square'},
+    '🐮':{freq:150,type:'sine'}, '🐑':{freq:1200,type:'sine'},
+    '🐔':{freq:1000,type:'square'}, '🦆':{freq:600,type:'sawtooth'},
+    '🐷':{freq:250,type:'sawtooth'}, '🦁':{freq:90,type:'sawtooth'},
+    '🐘':{freq:60,type:'sine'}, '🐰':{freq:900,type:'sine'},
+    '🐸':{freq:300,type:'square'}, '🦊':{freq:350,type:'sawtooth'},
+    '🐺':{freq:200,type:'sawtooth'}, '🦒':{freq:100,type:'sine'},
+    '🐧':{freq:500,type:'square'}, '🦉':{freq:280,type:'sine'},
+    '🦋':{freq:1000,type:'sine'}, '🐢':{freq:80,type:'sine'},
+    '🐙':{freq:120,type:'sawtooth'}, '🐟':{freq:700,type:'sine'},
+  };
+  const s = sounds[animal] || {freq:500,type:'sine'};
+  playTone(s.freq, s.type, duration, 0.12);
+  if(animal==='🐔') setTimeout(()=>playTone(s.freq*1.5, s.type, duration*0.5, 0.1), 150);
+}
+
+// ====================== PARTICLE SYSTEM ======================
+const pCanvas = document.getElementById('particles-canvas');
+const pCtx = pCanvas.getContext('2d');
+let particles = [];
+function initParticles() {
+  pCanvas.style.display = 'block';
+  pCanvas.width = window.innerWidth;
+  pCanvas.height = window.innerHeight;
+  particles = [];
+  for(let i=0;i<40;i++){
+    particles.push({
+      x:pCanvas.width/2,y:pCanvas.height/2,
+      vx:(Math.random()-0.5)*12,vy:(Math.random()-0.5)*12-4,
+      size: Math.random()*6+3,
+      color: ['#FF6B9D','#FFD93D','#6BCB77','#4D96FF','#FF8E53','#A66CFF','#FF6B6B'][Math.floor(Math.random()*7)],
+      life:1,decay:0.01+Math.random()*0.02,gravity:0.15
+    });
+  }
+  requestAnimationFrame(animateParticles);
+}
+function animateParticles() {
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  let alive = false;
+  for(let p of particles){
+    if(p.life<=0)continue;
+    alive = true;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += p.gravity;
+    p.life -= p.decay;
+    pCtx.globalAlpha = p.life;
+    pCtx.fillStyle = p.color;
+    pCtx.beginPath();
+    pCtx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    pCtx.fill();
+  }
+  if(alive) requestAnimationFrame(animateParticles);
+  else pCanvas.style.display = 'none';
+}
+
+// ====================== CONFETTI / CELEBRATION ======================
+function spawnConfetti(count=80) {
+  const overlay = document.getElementById('celebration-overlay');
+  overlay.style.display = 'block';
+  const colors = ['#FF6B9D','#FFD93D','#6BCB77','#4D96FF','#FF8E53','#A66CFF','#FF6B6B','#00D2FF'];
+  overlay.innerHTML = '';
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random()*100+'%';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.width = (Math.random()*2+1)+'vmin';
+    el.style.height = (Math.random()*2+1)+'vmin';
+    el.style.borderRadius = Math.random()>0.5?'50%':'0';
+    el.style.animationDuration = (Math.random()*2+2)+'s';
+    el.style.animationDelay = (Math.random()*1)+'s';
+    overlay.appendChild(el);
+  }
+  // Stars
+  for(let i=0;i<15;i++){
+    const star = document.createElement('div');
+    star.className = 'star-particle';
+    star.textContent = ['⭐','🌟','✨','💫'][Math.floor(Math.random()*4)];
+    star.style.left = Math.random()*100+'%';
+    star.style.top = (Math.random()*60+20)+'%';
+    star.style.animationDuration = (Math.random()*1.5+1.5)+'s';
+    star.style.animationDelay = (Math.random()*1.5)+'s';
+    overlay.appendChild(star);
+  }
+  setTimeout(()=>{overlay.style.display='none';overlay.innerHTML='';}, 4000);
+}
+
+// ====================== FINGER HINT ======================
+let hintTimer = null, hintTarget = null;
+function startHintTimer(getTargetEl) {
+  clearTimeout(hintTimer);
+  document.getElementById('hint-finger').style.display = 'none';
+  hintTimer = setTimeout(()=>{
+    const el = getTargetEl();
+    if(!el) return;
+    hintTarget = el;
+    const rect = el.getBoundingClientRect();
+    const finger = document.getElementById('hint-finger');
+    finger.style.left = (rect.left+rect.width/2-6)+'px';
+    finger.style.top = (rect.top+rect.height/2-6)+'px';
+    finger.style.display = 'block';
+    // Auto hide after animation
+    setTimeout(()=>{finger.style.display='none';}, 2500);
+  }, 4000);
+}
+function cancelHint() {
+  clearTimeout(hintTimer);
+  document.getElementById('hint-finger').style.display = 'none';
+}
+
+// ====================== GAME STATE ======================
+let currentGame = null;
+let currentLevel = 1;
+let maxLevel = 15;
+let energyValue = 0;
+let maxEnergy = 10;
+let gameData = {};
+
+function updateEnergy(val) {
+  energyValue = Math.min(val, maxEnergy);
+  document.getElementById('energy-fill').style.width = (energyValue/maxEnergy*100)+'%';
+}
+
+function showHome() {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('home').classList.add('active');
+  document.getElementById('celebration-overlay').style.display = 'none';
+}
+
+function transitionToGame(gameIdx, level) {
+  const overlay = document.getElementById('transition-overlay');
+  overlay.classList.add('show');
+  overlay.style.background = `linear-gradient(135deg,${['#a8edea','#d4fc79','#fbc2eb','#fdcbf1','#a1c4fd','#f6d365','#89f7fe','#f093fb','#4facfe','#fa709a'][gameIdx-1]},${['#fed6e3','#96e6a1','#a6c1ee','#e6dee9','#c2e9fb','#fda085','#66a6ff','#f5576c','#00f2fe','#fee140'][gameIdx-1]})`;
+  setTimeout(()=>{
+    startGame(gameIdx, level);
+    overlay.classList.remove('show');
+  }, 400);
+}
+
+function startGame(gameIdx, level) {
+  currentGame = gameIdx;
+  currentLevel = level || 1;
+  energyValue = 0;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('game-page').classList.add('active');
+  loadLevel(currentGame, currentLevel);
+}
+
+function loadLevel(gameIdx, level) {
+  const game = GAMES[gameIdx-1];
+  maxLevel = game.totalLevels || 15;
+  document.getElementById('level-display').textContent = level;
+  
+  // Celebration levels every 5
+  if(level % 5 === 0 && level > 1) {
+    spawnConfetti(100);
+    playCorrect();
+  }
+  
+  const area = document.getElementById('game-area');
+  area.style.background = '';
+  area.className = '';
+  
+  game.init(level);
+  game.render();
+  game.bindEvents();
+  cancelHint();
+  
+  // Start hint timer after render - each game implements getHintTarget
+  if(game.getHintTarget) {
+    startHintTimer(()=>game.getHintTarget());
+  }
+}
+
+// ====================== GAME 1: Color Sort ======================
+const GAME1 = {
+  totalLevels: 15,
+  data: null,
+  animating: false,
+  
+  getLevelParams(level) {
+    let colors, options, targetColor;
+    const allColors = ['🔴','🟡','🟢','🔵','🟣','🟠'];
+    const colorNames = ['red','yellow','green','blue','purple','orange'];
+    
+    if(level <= 3) { options=3; colors=allColors.slice(0,4); }
+    else if(level <= 7) { options=4; colors=allColors.slice(0,5); }
+    else if(level <= 12) { options=5; colors=allColors.slice(0,6); }
+    else { options=6; colors=allColors; }
+    
+    // For harder levels, use similar colors
+    if(level > 7) {
+      targetColor = colors[Math.floor(Math.random()*colors.length)];
+    } else {
+      targetColor = colors[Math.floor(Math.random()*colors.length)];
+    }
+    
+    // Build items with target + distractors
+    let items = [];
+    let targetIdx = Math.floor(Math.random()*options);
+    let usedColors = new Set();
+    
+    // Add target
+    items[targetIdx] = {emoji:targetColor, color:colorNames[allColors.indexOf(targetColor)], isTarget:true};
+    usedColors.add(targetColor);
+    
+    // Add distractors
+    let distractorPool = colors.filter(c => c !== targetColor);
+    if(level > 7) {
+      // For harder levels, use similar colors (same hue family)
+      const targetIdx = allColors.indexOf(targetColor);
+      const similar = [];
+      for(let i=Math.max(0,targetIdx-1);i<=Math.min(allColors.length-1,targetIdx+1);i++){
+        if(allColors[i] !== targetColor) similar.push(allColors[i]);
+      }
+      if(similar.length > 0) {
+        distractorPool = similar.concat(distractorPool.filter(c => !similar.includes(c)));
+      }
+    }
+    
+    let distractors = [];
+    let pool = [...distractorPool];
+    for(let i=0;i<options-1;i++){
+      if(pool.length>0){
+        const idx = Math.floor(Math.random()*pool.length);
+        distractors.push(pool.splice(idx,1)[0]);
+      }
+    }
+    
+    let di=0;
+    for(let i=0;i<options;i++){
+      if(!items[i]){
+        items[i] = {emoji:distractors[di++], color:colorNames[allColors.indexOf(distractors[di-1])], isTarget:false};
+      }
+    }
+    
+    return {items, targetColor, options};
+  },
+  
+  init(level) {
+    const p = this.getLevelParams(level);
+    this.data = p;
+    this.animating = false;
+  },
+  
+  render() {
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="game-scene" style="flex-direction:column;gap:3vmin">
+        <div class="color-plate" id="color-plate">🍽️</div>
+        <div style="display:flex;gap:2vmin;flex-wrap:wrap;justify-content:center" id="food-items"></div>
+      </div>
+    `;
+    const container = document.getElementById('food-items');
+    this.data.items.forEach((item,i)=>{
+      const el = document.createElement('div');
+      el.className = 'color-item';
+      el.dataset.index = i;
+      el.style.borderColor = item.color;
+      el.textContent = item.emoji;
+      if(item.isTarget) el.classList.add('breathe');
+      container.appendChild(el);
+    });
+  },
+  
+  bindEvents() {
+    const items = document.querySelectorAll('#food-items .color-item');
+    items.forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        if(this.animating) return;
+        cancelHint();
+        this.checkResult(parseInt(el.dataset.index));
+      });
+    });
+  },
+  
+  checkResult(index) {
+    const item = this.data.items[index];
+    if(this.animating) return;
+    
+    if(item.isTarget) {
+      this.animating = true;
+      playCorrect();
+      const plate = document.getElementById('color-plate');
+      plate.textContent = item.emoji;
+      plate.style.fontSize = '15vmin';
+      
+      const el = document.querySelector(`#food-items .color-item[data-index="${index}"]`);
+      el.classList.remove('breathe');
+      el.style.transform = 'scale(0)';
+      el.style.opacity = '0';
+      
+      initParticles();
+      
+      setTimeout(()=>{
+        updateEnergy(energyValue+1);
+        if(currentLevel < maxLevel) {
+          currentLevel++;
+          loadLevel(currentGame, currentLevel);
+        } else {
+          // Game complete
+          spawnConfetti(120);
+          setTimeout(()=>{showHome();}, 3000);
+        }
+        this.animating = false;
+      }, 1500);
+    } else {
+      playWrong();
+      const el = document.querySelector(`#food-items .color-item[data-index="${index}"]`);
+      el.classList.add('shake');
+      setTimeout(()=>el.classList.remove('shake'), 400);
+    }
+  },
+  
+  getHintTarget() {
+    return document.querySelector('.color-item.breathe');
+  }
+};
+
+// ====================== GAME 2: Animal Shadow ======================
+const GAME2 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  
+  getLevelParams(level) {
+    let options, animals;
+    const allAnimals = ['🐱','🐶','🐰','🦊','🐻','🐼','🐨','🦁','🐯','🐸','🐧','🐘','🦒','🦓','🐺','🦊','🐮','🐷','🐔','🦆'];
+    
+    if(level <= 4) { options=3; animals=allAnimals.slice(0,5); }
+    else if(level <= 9) { options=4; animals=allAnimals.slice(0,9); }
+    else if(level <= 15) { options=5; animals=allAnimals.slice(0,14); }
+    else { options=6; animals=allAnimals.slice(5,20); }
+    
+    const correctIdx = Math.floor(Math.random()*options);
+    const correct = animals[Math.floor(Math.random()*animals.length)];
+    
+    let choices = [correct];
+    let used = new Set([correct]);
+    let pool = animals.filter(a=>!used.has(a));
+    for(let i=0;i<options-1;i++){
+      if(pool.length>0){
+        const idx = Math.floor(Math.random()*pool.length);
+        choices.push(pool[idx]);
+        used.add(pool[idx]);
+        pool.splice(idx,1);
+      }
+    }
+    // Shuffle
+    for(let i=choices.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));[choices[i],choices[j]]=[choices[j],choices[i]];
+    }
+    const newCorrectIdx = choices.indexOf(correct);
+    
+    return {choices, correctIdx:newCorrectIdx, correct};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.animating = false;
+  },
+  
+  render() {
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="game-scene" style="flex-direction:row;gap:2vmin;width:100%;padding:2vmin">
+        <div class="shadow-area">
+          <div class="shadow-char" id="shadow-char">${this.data.correct}</div>
+        </div>
+        <div class="animal-options" id="animal-options"></div>
+      </div>
+    `;
+    const container = document.getElementById('animal-options');
+    this.data.choices.forEach((animal,i)=>{
+      const el = document.createElement('div');
+      el.className = 'option-btn';
+      el.dataset.index = i;
+      el.textContent = animal;
+      el.style.width = '18vmin';
+      el.style.height = '18vmin';
+      el.style.fontSize = '9vmin';
+      if(i === this.data.correctIdx) el.classList.add('breathe');
+      container.appendChild(el);
+    });
+  },
+  
+  bindEvents() {
+    const btns = document.querySelectorAll('#animal-options .option-btn');
+    btns.forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(this.animating) return;
+        cancelHint();
+        this.checkResult(parseInt(el.dataset.index));
+      });
+    });
+  },
+  
+  checkResult(index) {
+    if(this.animating) return;
+    if(index === this.data.correctIdx) {
+      this.animating = true;
+      playCorrect();
+      const shadow = document.getElementById('shadow-char');
+      shadow.classList.add('colorful');
+      shadow.style.filter = 'none';
+      
+      const el = document.querySelector(`#animal-options .option-btn[data-index="${index}"]`);
+      el.classList.add('correct');
+      initParticles();
+      
+      setTimeout(()=>{
+        updateEnergy(energyValue+1);
+        if(currentLevel < maxLevel) {
+          currentLevel++;
+          loadLevel(currentGame, currentLevel);
+        } else {
+          spawnConfetti(120);
+          setTimeout(()=>{showHome();}, 3000);
+        }
+        this.animating = false;
+      }, 1500);
+    } else {
+      playWrong();
+      const el = document.querySelector(`#animal-options .option-btn[data-index="${index}"]`);
+      el.classList.add('shake');
+      setTimeout(()=>el.classList.remove('shake'), 400);
+    }
+  },
+  
+  getHintTarget() {
+    return document.querySelector('#animal-options .breathe');
+  }
+};
+
+// ====================== GAME 3: Memory Cards ======================
+const GAME3 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  playerStep: 0,
+  showing: false,
+  
+  getLevelParams(level) {
+    let pairs, seqLen, showSpeed;
+    if(level <= 3) { pairs=1; seqLen=2; showSpeed=800; }
+    else if(level <= 7) { pairs=2; seqLen=3; showSpeed=800; }
+    else if(level <= 12) { pairs=3; seqLen=4; showSpeed=800; }
+    else if(level <= 17) { pairs=4; seqLen=5; showSpeed=500; }
+    else { pairs=4; seqLen=6; showSpeed=500; }
+    
+    const emojis = ['🐱','🐶','🐰','🐻','🐼','🐨','🦁','🐯','🐸','🐧','🐘','🦒','🐺','🦊','🐮','🐷','🐔','🦆'];
+    let cards = [];
+    let usedEmojis = [];
+    for(let i=0;i<seqLen;i++){
+      const e = emojis[Math.floor(Math.random()*emojis.length)];
+      usedEmojis.push(e);
+      cards.push(e);
+    }
+    // Add filler cards
+    const totalCards = pairs*2;
+    while(cards.length < totalCards){
+      const e = emojis[Math.floor(Math.random()*emojis.length)];
+      if(!cards.includes(e)){ cards.push(e); cards.push(e); }
+    }
+    if(cards.length > totalCards) cards = cards.slice(0,totalCards);
+    // Shuffle
+    for(let i=cards.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]];
+    }
+    
+    return {cards, sequence:usedEmojis, seqLen, showSpeed, cols:Math.min(3,totalCards/2)};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.playerStep = 0;
+    this.animating = false;
+    this.showing = false;
+  },
+  
+  render() {
+    const d = this.data;
+    const area = document.getElementById('game-area');
+    const cols = d.cards.length <= 4 ? 2 : (d.cards.length <= 6 ? 3 : 4);
+    area.innerHTML = `
+      <div class="game-scene" style="flex-direction:column;gap:2vmin">
+        <div class="memory-grid" style="grid-template-columns:repeat(${cols},1fr)" id="memory-grid"></div>
+      </div>
+    `;
+    const grid = document.getElementById('memory-grid');
+    d.cards.forEach((card,i)=>{
+      const el = document.createElement('div');
+      el.className = 'memory-card';
+      el.dataset.index = i;
+      el.dataset.emoji = card;
+      el.innerHTML = '<span class="card-back">❓</span>';
+      grid.appendChild(el);
+    });
+  },
+  
+  bindEvents() {
+    // After render, show the sequence
+    this.showSequence();
+    
+    const grid = document.getElementById('memory-grid');
+    grid.addEventListener('click', (e)=>{
+      const card = e.target.closest('.memory-card');
+      if(!card || this.animating || this.showing) return;
+      cancelHint();
+      this.checkResult(parseInt(card.dataset.index));
+    });
+    
+    // Store reference for hint
+    this._grid = grid;
+  },
+  
+  showSequence() {
+    this.showing = true;
+    const cards = document.querySelectorAll('.memory-card');
+    cards.forEach(c=>c.classList.remove('flipped','highlight'));
+    
+    const seq = this.data.sequence;
+    seq.forEach((emoji, idx)=>{
+      // Find a card with this emoji not yet used in sequence
+      setTimeout(()=>{
+        // Find the first card with this emoji that hasn't been flipped
+        for(let c of cards){
+          if(c.dataset.emoji === emoji && !c.classList.contains('flipped')){
+            c.classList.add('flipped');
+            c.textContent = emoji;
+            c.classList.add('highlight');
+            setTimeout(()=>{
+              c.classList.remove('highlight');
+              c.classList.remove('flipped');
+              c.innerHTML = '<span class="card-back">❓</span>';
+              if(idx === seq.length-1){
+                this.showing = false;
+                this.playerStep = 0;
+                // Clear flipped state
+                cards.forEach(c=>{c.classList.remove('flipped');c.innerHTML='<span class="card-back">❓</span>';});
+              }
+            }, this.data.showSpeed);
+            break;
+          }
+        }
+      }, idx * (this.data.showSpeed + 300));
+    });
+    this.playerStep = 0;
+  },
+  
+  checkResult(index) {
+    if(this.showing || this.animating) return;
+    const card = document.querySelector(`.memory-card[data-index="${index}"]`);
+    const expectedEmoji = this.data.sequence[this.playerStep];
+    
+    if(card.dataset.emoji === expectedEmoji) {
+      playTone(660, 'sine', 0.1, 0.1);
+      card.classList.add('flipped', 'matched');
+      card.textContent = expectedEmoji;
+      this.playerStep++;
+      
+      if(this.playerStep >= this.data.sequence.length) {
+        this.animating = true;
+        setTimeout(()=>{
+          initParticles();
+          playCorrect();
+          updateEnergy(energyValue+1);
+          if(currentLevel < maxLevel) {
+            currentLevel++;
+            setTimeout(()=>loadLevel(currentGame, currentLevel), 1000);
+          } else {
+            spawnConfetti(120);
+            setTimeout(()=>{showHome();}, 3000);
+          }
+          this.animating = false;
+        }, 500);
+      }
+    } else {
+      playWrong();
+      card.classList.add('error');
+      // Reset all matched cards
+      setTimeout(()=>{
+        document.querySelectorAll('.memory-card.matched').forEach(c=>{
+          c.classList.remove('matched','flipped');
+          c.innerHTML = '<span class="card-back">❓</span>';
+        });
+        card.classList.remove('error');
+        this.playerStep = 0;
+        // Re-show the sequence
+        setTimeout(()=>this.showSequence(), 500);
+      }, 600);
+    }
+  },
+  
+  getHintTarget() {
+    if(this.showing) return null;
+    const expectedEmoji = this.data.sequence[this.playerStep];
+    return document.querySelector(`.memory-card[data-emoji="${expectedEmoji}"]:not(.matched)`);
+  }
+};
+
+// ====================== GAME 4: Spot Difference ======================
+const GAME4 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  foundCount: 0,
+  
+  getLevelParams(level) {
+    let gridSize, diffCount, diffType;
+    if(level <= 4) { gridSize=4; diffCount=1; diffType='color'; }
+    else if(level <= 9) { gridSize=4; diffCount=2; diffType='shape'; }
+    else if(level <= 15) { gridSize=5; diffCount=3; diffType='size'; }
+    else { gridSize=6; diffCount=4; diffType='detail'; }
+    
+    const themes = [
+      {name:'🏠', emojis:['🏠','🚪','🪟','🌳','☀️','🌺','🐦','☁️']},
+      {name:'🦁', emojis:['🦁','🐘','🦒','🐒','🐍','🦜','🌴','🪨']},
+      {name:'🚗', emojis:['🚗','🚌','🚲','✈️','🚢','🚁','🛴','🏍️']},
+      {name:'🐠', emojis:['🐠','🐙','🦈','🐋','🦀','🐡','🪸','🐚']},
+    ];
+    const theme = themes[Math.floor(level/5)%4];
+    
+    // Build left grid
+    let leftEmojis = [];
+    const totalCells = gridSize*gridSize;
+    for(let i=0;i<totalCells;i++){
+      leftEmojis.push(theme.emojis[Math.floor(Math.random()*theme.emojis.length)]);
+    }
+    // Right grid = copy of left with diffIndices changed
+    let rightEmojis = [...leftEmojis];
+    let diffIndices = [];
+    while(diffIndices.length < diffCount){
+      const idx = Math.floor(Math.random()*totalCells);
+      if(!diffIndices.includes(idx)){
+        diffIndices.push(idx);
+        // Change to a different emoji
+        let newEmoji;
+        do{
+          newEmoji = theme.emojis[Math.floor(Math.random()*theme.emojis.length)];
+        }while(newEmoji === leftEmojis[idx]);
+        rightEmojis[idx] = newEmoji;
+      }
+    }
+    
+    return {leftEmojis, rightEmojis, diffIndices, gridSize, theme};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.foundCount = 0;
+    this.animating = false;
+  },
+  
+  render() {
+    const d = this.data;
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="game-scene" style="flex-direction:column;gap:1vmin;width:100%">
+        <div style="text-align:center;font-size:5vmin">🔍</div>
+        <div class="diff-scene">
+          <div class="diff-side" id="diff-left" style="grid-template-columns:repeat(${d.gridSize},1fr)"></div>
+          <div class="diff-side" id="diff-right" style="grid-template-columns:repeat(${d.gridSize},1fr)"></div>
+        </div>
+      </div>
+    `;
+    const left = document.getElementById('diff-left');
+    const right = document.getElementById('diff-right');
+    
+    d.leftEmojis.forEach((emoji,i)=>{
+      const cell = document.createElement('div');
+      cell.className = 'diff-cell';
+      cell.dataset.index = i;
+      cell.textContent = emoji;
+      left.appendChild(cell);
+    });
+    d.rightEmojis.forEach((emoji,i)=>{
+      const cell = document.createElement('div');
+      cell.className = 'diff-cell';
+      cell.dataset.index = i;
+      cell.textContent = emoji;
+      right.appendChild(cell);
+    });
+  },
+  
+  bindEvents() {
+    const cells = document.querySelectorAll('#diff-right .diff-cell');
+    cells.forEach(el=>{
+      el.addEventListener('click', ()=>{
+        if(this.animating) return;
+        cancelHint();
+        this.checkResult(parseInt(el.dataset.index));
+      });
+    });
+  },
+  
+  checkResult(index) {
+    if(this.animating || this.data.diffIndices.includes(index) && document.querySelector(`#diff-right .diff-cell[data-index="${index}"]`).classList.contains('found')) return;
+    
+    if(this.data.diffIndices.includes(index)) {
+      this.foundCount++;
+      playCorrect();
+      const cell = document.querySelector(`#diff-right .diff-cell[data-index="${index}"]`);
+      cell.classList.add('found');
+      cell.style.background = '#c8ffc8';
+      
+      // Mark left cell too
+      const leftCell = document.querySelector(`#diff-left .diff-cell[data-index="${index}"]`);
+      if(leftCell){
+        leftCell.style.outline = '3px solid #4CAF50';
+        leftCell.style.borderRadius = '2px';
+      }
+      
+      initParticles();
+      
+      if(this.foundCount >= this.data.diffIndices.length) {
+        this.animating = true;
+        setTimeout(()=>{
+          updateEnergy(energyValue+1);
+          if(currentLevel < maxLevel) {
+            currentLevel++;
+            loadLevel(currentGame, currentLevel);
+          } else {
+            spawnConfetti(120);
+            setTimeout(()=>{showHome();}, 3000);
+          }
+          this.animating = false;
+        }, 1500);
+      } else {
+        // Hint next diff
+        const unfound = document.querySelector('#diff-right .diff-cell:not(.found)');
+        if(unfound && this.data.diffIndices.length > 0){
+          unfound.style.animation = 'breathe 1.2s ease-in-out infinite';
+        }
+      }
+    } else {
+      playWrong();
+      const cell = document.querySelector(`#diff-right .diff-cell[data-index="${index}"]`);
+      cell.classList.add('shake');
+      setTimeout(()=>cell.classList.remove('shake'), 400);
+    }
+  },
+  
+  getHintTarget() {
+    return document.querySelector('#diff-right .diff-cell:not(.found)');
+  }
+};
+
+// ====================== GAME 5: Maze ======================
+const GAME5 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  playerPos: null,
+  
+  generateMaze(size) {
+    // Simple iterative DFS maze generation
+    const maze = Array(size).fill().map(()=>Array(size).fill(1)); // 1=wall
+    const visited = Array(size).fill().map(()=>Array(size).fill(false));
+    
+    function carve(x,y){
+      visited[y][x]=true;
+      maze[y][x]=0; // 0=path
+      const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+      for(let i=dirs.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [dirs[i],dirs[j]]=[dirs[j],dirs[i]];
+      }
+      for(let [dx,dy] of dirs){
+        const nx=x+dx*2, ny=y+dy*2;
+        if(nx>=0&&nx<size&&ny>=0&&ny<size&&!visited[ny][nx]){
+          maze[y+dy][x+dx]=0;
+          carve(nx,ny);
+        }
+      }
+    }
+    carve(0,0);
+    return maze;
+  },
+  
+  hasPath(maze, start, end) {
+    const q=[start];
+    const visited=new Set();
+    visited.add(`${start[0]},${start[1]}`);
+    while(q.length>0){
+      const [x,y]=q.shift();
+      if(x===end[0]&&y===end[1]) return true;
+      for(let [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
+        const nx=x+dx, ny=y+dy;
+        if(nx>=0&&nx<maze[0].length&&ny>=0&&ny<maze.length&&maze[ny][nx]===0&&!visited.has(`${nx},${ny}`)){
+          visited.add(`${nx},${ny}`);
+          q.push([nx,ny]);
+        }
+      }
+    }
+    return false;
+  },
+  
+  getLevelParams(level) {
+    let size;
+    if(level<=4) size=4;
+    else if(level<=9) size=5;
+    else if(level<=15) size=6;
+    else size=7;
+    
+    // Adjust difficulty for maze: use smaller effective size for first levels
+    let maze;
+    let attempts=0;
+    do{
+      maze = this.generateMaze(size);
+      attempts++;
+      if(attempts>20) break;
+    }while(!this.hasPath(maze, [0,0], [size-1, size-1]));
+    
+    // Ensure start and end are path
+    maze[0][0]=0;
+    maze[size-1][size-1]=0;
+    
+    return {maze, size, start:[0,0], end:[size-1,size-1]};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.playerPos = [...this.data.start];
+    this.animating = false;
+  },
+  
+  render() {
+    const d = this.data;
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="maze-container">
+        <div class="maze-grid" style="grid-template-columns:repeat(${d.size},1fr)" id="maze-grid"></div>
+        <div class="maze-dpad">
+          <div class="maze-dpad-empty"></div>
+          <button class="maze-dpad-btn" data-dir="up">⬆️</button>
+          <div class="maze-dpad-empty"></div>
+          <button class="maze-dpad-btn" data-dir="left">⬅️</button>
+          <button class="maze-dpad-btn" data-dir="down">⬇️</button>
+          <button class="maze-dpad-btn" data-dir="right">➡️</button>
+        </div>
+      </div>
+    `;
+    const grid = document.getElementById('maze-grid');
+    for(let y=0;y<d.size;y++){
+      for(let x=0;x<d.size;x++){
+        const cell = document.createElement('div');
+        cell.className = 'maze-cell';
+        cell.dataset.x=x; cell.dataset.y=y;
+        if(x===d.start[0]&&y===d.start[1]) {cell.classList.add('maze-start'); cell.textContent='🚗';}
+        else if(x===d.end[0]&&y===d.end[1]) {cell.classList.add('maze-end'); cell.textContent='🚩';}
+        else if(d.maze[y][x]===0) cell.classList.add('maze-path');
+        else cell.classList.add('maze-wall');
+        grid.appendChild(cell);
+      }
+    }
+    this.updatePlayer();
+  },
+  
+  updatePlayer() {
+    // Remove old player marker
+    document.querySelectorAll('.maze-player').forEach(el=>{
+      el.classList.remove('maze-player');
+      const x=parseInt(el.dataset.x), y=parseInt(el.dataset.y);
+      const d=this.data;
+      if(x===d.start[0]&&y===d.start[1]) {el.textContent='🚗'; el.classList.add('maze-start');}
+      else if(x===d.end[0]&&y===d.end[1]) {el.textContent='🚩'; el.classList.add('maze-end');}
+      else el.textContent='';
+    });
+    
+    const [px,py]=this.playerPos;
+    const cell = document.querySelector(`.maze-cell[data-x="${px}"][data-y="${py}"]`);
+    if(cell){
+      cell.classList.add('maze-player');
+      cell.textContent = '🚗';
+    }
+  },
+  
+  bindEvents() {
+    document.querySelectorAll('.maze-dpad-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(this.animating) return;
+        cancelHint();
+        this.movePlayer(btn.dataset.dir);
+      });
+    });
+  },
+  
+  movePlayer(dir) {
+    const [px,py]=this.playerPos;
+    const d=this.data;
+    let nx=px, ny=py;
+    const moves = {up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+    const [dx,dy]=moves[dir];
+    nx+=dx; ny+=dy;
+    
+    if(nx<0||nx>=d.size||ny<0||ny>=d.size||d.maze[ny][nx]===1){
+      // Wall hit
+      playWrong();
+      const player = document.querySelector('.maze-player');
+      if(player) player.style.animation = 'shake 0.3s';
+      setTimeout(()=>{if(player)player.style.animation='';},300);
+      return;
+    }
+    
+    this.playerPos=[nx,ny];
+    this.updatePlayer();
+    
+    // Check win
+    if(nx===d.end[0]&&ny===d.end[1]){
+      this.animating=true;
+      playCorrect();
+      initParticles();
+      // Star path animation
+      document.querySelectorAll('.maze-cell').forEach(c=>{
+        const cx=parseInt(c.dataset.x), cy=parseInt(c.dataset.y);
+        if(d.maze[cy][cx]===0) {
+          c.innerHTML = '⭐';
+          c.style.animation = 'pop .3s ease-out';
+        }
+      });
+      setTimeout(()=>{
+        updateEnergy(energyValue+1);
+        if(currentLevel<maxLevel){
+          currentLevel++;
+          loadLevel(currentGame, currentLevel);
+        } else {
+          spawnConfetti(120);
+          setTimeout(()=>{showHome();},3000);
+        }
+        this.animating=false;
+      },2000);
+    }
+  },
+  
+  getHintTarget() {
+    return document.querySelector('.maze-dpad-btn');
+  }
+};
+
+// ====================== GAME 6: Shape Puzzle ======================
+const GAME6 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  
+  getLevelParams(level) {
+    let slots, pieces, shapes;
+    const allShapes = ['🔴','🟦','🟨','⭐','🟢','💜','🔶','🔷','❤️','💎','⬛','🟫'];
+    
+    if(level<=4) { slots=2; shapes=allShapes.slice(0,4); }
+    else if(level<=9) { slots=3; shapes=allShapes.slice(0,6); }
+    else if(level<=15) { slots=4; shapes=allShapes.slice(0,9); }
+    else { slots=6; shapes=allShapes.slice(0,12); }
+    
+    let chosen = [];
+    let pool = [...shapes];
+    for(let i=0;i<slots;i++){
+      const idx=Math.floor(Math.random()*pool.length);
+      chosen.push(pool.splice(idx,1)[0]);
+    }
+    
+    // Extra pieces (distractors)
+    let extras = [];
+    let extraPool = allShapes.filter(s=>!chosen.includes(s));
+    const totalPieces = Math.min(slots+2, pieces || slots+2);
+    while(extras.length < Math.min(2, totalPieces-slots)){
+      if(extraPool.length>0){
+        const idx=Math.floor(Math.random()*extraPool.length);
+        extras.push(extraPool.splice(idx,1)[0]);
+      } else break;
+    }
+    
+    const allPieces = [...chosen, ...extras];
+    for(let i=allPieces.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));[allPieces[i],allPieces[j]]=[allPieces[j],allPieces[i]];
+    }
+    
+    return {slots, chosen, pieces:allPieces, correctMap:chosen};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.animating = false;
+  },
+  
+  render() {
+    const d = this.data;
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="puzzle-container">
+        <div class="puzzle-target" id="puzzle-target">
+          <div style="font-size:12vmin;color:#ccc">🧩</div>
+        </div>
+        <div class="puzzle-pieces" id="puzzle-pieces"></div>
+      </div>
+    `;
+    
+    const target = document.getElementById('puzzle-target');
+    const slotSize = Math.min(80/d.slots, 20);
+    target.innerHTML = '';
+    d.chosen.forEach((shape,i)=>{
+      const slot = document.createElement('div');
+      slot.className = 'puzzle-slot';
+      slot.dataset.slotIndex = i;
+      slot.dataset.expected = shape;
+      const sz = Math.min(80/d.slots, 18);
+      slot.style.width = sz+'vmin';
+      slot.style.height = sz+'vmin';
+      slot.style.left = (20 + i*22)+'%';
+      slot.style.top = '35%';
+      slot.textContent = '❓';
+      target.appendChild(slot);
+    });
+    
+    const container = document.getElementById('puzzle-pieces');
+    d.pieces.forEach((shape,i)=>{
+      const el = document.createElement('div');
+      el.className = 'puzzle-piece';
+      el.dataset.shape = shape;
+      el.dataset.pieceIndex = i;
+      el.textContent = shape;
+      el.draggable = false;
+      container.appendChild(el);
+    });
+    
+    this.initDrag();
+  },
+  
+  initDrag() {
+    let dragged = null, dragClone = null, offsetX, offsetY;
+    
+    const pieces = document.querySelectorAll('.puzzle-piece');
+    
+    pieces.forEach(p=>{
+      p.addEventListener('touchstart', (e)=>{
+        if(this.animating || p.classList.contains('placed')) return;
+        cancelHint();
+        const touch = e.touches[0];
+        dragged = p;
+        const rect = p.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+        p.style.zIndex = '100';
+        p.style.position = 'relative';
+        p.style.transform = 'scale(1.15)';
+      });
+      
+      p.addEventListener('touchmove', (e)=>{
+        if(!dragged) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        dragged.style.position = 'fixed';
+        dragged.style.left = (touch.clientX - offsetX)+'px';
+        dragged.style.top = (touch.clientY - offsetY)+'px';
+        dragged.style.zIndex = '100';
+        dragged.style.transform = 'scale(1.15)';
+        
+        // Check proximity to slots
+        document.querySelectorAll('.puzzle-slot:not(.filled)').forEach(s=>{
+          const sr = s.getBoundingClientRect();
+          const tr = dragged.getBoundingClientRect();
+          const cx = tr.left+tr.width/2;
+          const cy = tr.top+tr.height/2;
+          if(cx>sr.left&&cx<sr.right&&cy>sr.top&&cy<sr.bottom){
+            s.classList.add('hover');
+          } else {
+            s.classList.remove('hover');
+          }
+        });
+      });
+      
+      p.addEventListener('touchend', (e)=>{
+        if(!dragged) return;
+        const shape = dragged.dataset.shape;
+        let dropped = false;
+        
+        document.querySelectorAll('.puzzle-slot:not(.filled)').forEach(s=>{
+          const sr = s.getBoundingClientRect();
+          const tr = dragged.getBoundingClientRect();
+          const cx = tr.left+tr.width/2;
+          const cy = tr.top+tr.height/2;
+          if(cx>sr.left&&cx<sr.right&&cy>sr.top&&cy<sr.bottom){
+            if(s.dataset.expected === shape){
+              // Correct!
+              this.animating = true;
+              playCorrect();
+              s.classList.remove('hover');
+              s.classList.add('filled');
+              s.textContent = '✅';
+              dragged.classList.add('placed');
+              dragged.style.position = '';
+              dragged.style.left = '';
+              dragged.style.top = '';
+              dragged.style.transform = '';
+              initParticles();
+              
+              // Check if all slots filled
+              const unfilled = document.querySelectorAll('.puzzle-slot:not(.filled)');
+              if(unfilled.length === 0){
+                setTimeout(()=>{
+                  const target = document.getElementById('puzzle-target');
+                  target.style.background = 'rgba(76,175,80,0.1)';
+                  target.querySelector('div') && (target.querySelector('div').textContent='🎉');
+                  updateEnergy(energyValue+1);
+                  if(currentLevel<maxLevel){
+                    currentLevel++;
+                    setTimeout(()=>loadLevel(currentGame, currentLevel), 1000);
+                  } else {
+                    spawnConfetti(120);
+                    setTimeout(()=>{showHome();},3000);
+                  }
+                  this.animating = false;
+                }, 1500);
+              } else {
+                this.animating = false;
+              }
+              dropped = true;
+            } else {
+              // Wrong piece
+              playWrong();
+              s.classList.remove('hover');
+            }
+          }
+        });
+        
+        if(!dropped){
+          dragged.style.position = '';
+          dragged.style.left = '';
+          dragged.style.top = '';
+          dragged.style.transform = '';
+        }
+        
+        document.querySelectorAll('.puzzle-slot').forEach(s=>s.classList.remove('hover'));
+        dragged = null;
+      });
+      
+      // Mouse fallback (arrow functions preserve 'this' = GAME6)
+      p.addEventListener('mousedown', (e) => {
+        if(this.animating || p.classList.contains('placed')) return;
+        cancelHint();
+        dragged = p;
+        const rect = p.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        p.style.position = 'fixed';
+        p.style.left = (e.clientX - offsetX)+'px';
+        p.style.top = (e.clientY - offsetY)+'px';
+        p.style.zIndex = '100';
+        p.style.transform = 'scale(1.15)';
+        
+        const onMove = (ev) => {
+          if(!dragged) return;
+          ev.preventDefault();
+          dragged.style.left = (ev.clientX - offsetX)+'px';
+          dragged.style.top = (ev.clientY - offsetY)+'px';
+          
+          document.querySelectorAll('.puzzle-slot:not(.filled)').forEach(s=>{
+            const sr = s.getBoundingClientRect();
+            const tr = dragged.getBoundingClientRect();
+            const cx = tr.left+tr.width/2;
+            const cy = tr.top+tr.height/2;
+            if(cx>sr.left&&cx<sr.right&&cy>sr.top&&cy<sr.bottom){
+              s.classList.add('hover');
+            } else {
+              s.classList.remove('hover');
+            }
+          });
+        };
+        
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          if(!dragged) return;
+          
+          const shape = dragged.dataset.shape;
+          document.querySelectorAll('.puzzle-slot:not(.filled)').forEach(s=>{
+            const sr = s.getBoundingClientRect();
+            const tr = dragged.getBoundingClientRect();
+            const cx = tr.left+tr.width/2;
+            const cy = tr.top+tr.height/2;
+            if(cx>sr.left&&cx<sr.right&&cy>sr.top&&cy<sr.bottom && s.dataset.expected === shape){
+              this.animating = true;
+              playCorrect();
+              s.classList.remove('hover');
+              s.classList.add('filled');
+              s.textContent = '✅';
+              dragged.classList.add('placed');
+              
+              initParticles();
+              
+              const unfilled = document.querySelectorAll('.puzzle-slot:not(.filled)');
+              if(unfilled.length === 0){
+                setTimeout(()=>{
+                  const target = document.getElementById('puzzle-target');
+                  target.querySelector('div') && (target.querySelector('div').textContent='🎉');
+                  updateEnergy(energyValue+1);
+                  if(currentLevel<maxLevel){
+                    currentLevel++;
+                    setTimeout(()=>loadLevel(currentGame, currentLevel), 1000);
+                  } else {
+                    spawnConfetti(120);
+                    setTimeout(()=>{showHome();},3000);
+                  }
+                  this.animating = false;
+                }, 1500);
+              } else {
+                this.animating = false;
+              }
+            } else if(s.dataset.expected !== shape && s.classList.contains('hover')){
+              playWrong();
+              s.classList.remove('hover');
+            }
+          });
+          
+          dragged.style.position = '';
+          dragged.style.left = '';
+          dragged.style.top = '';
+          dragged.style.transform = '';
+          document.querySelectorAll('.puzzle-slot').forEach(s=>s.classList.remove('hover'));
+          dragged = null;
+        };
+        
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    });
+  },
+  
+  bindEvents() {
+    // Drag events handled in render/initDrag
+  },
+  
+  getHintTarget() {
+    return document.querySelector('.puzzle-piece:not(.placed)');
+  }
+};
+
+// ====================== GAME 7: Whack-a-Mole ======================
+const GAME7 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  score: 0,
+  lives: 3,
+  activeTimer: null,
+  
+  getLevelParams(level) {
+    let holes, stayTime, targetScore, hasBomb;
+    if(level<=4) { holes=3; stayTime=2000; targetScore=5; hasBomb=false; }
+    else if(level<=9) { holes=6; stayTime=1500; targetScore=8; hasBomb=true; }
+    else if(level<=15) { holes=9; stayTime=1200; targetScore=12; hasBomb=true; }
+    else { holes=9; stayTime=800; targetScore=15; hasBomb=true; }
+    
+    return {holes, stayTime, targetScore, hasBomb, cols: Math.min(3, holes)};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.score = 0;
+    this.lives = 3;
+    this.animating = false;
+    if(this.activeTimer) clearInterval(this.activeTimer);
+  },
+  
+  render() {
+    const d = this.data;
+    const area = document.getElementById('game-area');
+    const rows = Math.ceil(d.holes/d.cols);
+    area.innerHTML = `
+      <div class="game-scene" style="flex-direction:column;gap:1vmin;width:100%">
+        <div class="whack-stats">
+          <span>⭐ <span id="whack-score">0</span></span>
+          <span>❤️ <span id="whack-lives">3</span></span>
+        </div>
+        <div class="whack-grid" style="grid-template-columns:repeat(${d.cols},1fr)" id="whack-grid"></div>
+      </div>
+    `;
+    const grid = document.getElementById('whack-grid');
+    for(let i=0;i<d.holes;i++){
+      const hole = document.createElement('div');
+      hole.className = 'whack-hole';
+      hole.dataset.index = i;
+      const animal = document.createElement('div');
+      animal.className = 'animal';
+      animal.dataset.anim = '';
+      hole.appendChild(animal);
+      grid.appendChild(hole);
+    }
+  },
+  
+  bindEvents() {
+    document.querySelectorAll('.whack-hole').forEach(hole=>{
+      hole.addEventListener('click', ()=>{
+        if(this.animating) return;
+        cancelHint();
+        const idx = parseInt(hole.dataset.index);
+        const animal = hole.querySelector('.animal');
+        if(animal.classList.contains('up')){
+          if(animal.classList.contains('bomb')){
+            // Hit bomb
+            this.lives--;
+            document.getElementById('whack-lives').textContent = Math.max(0,this.lives);
+            animal.classList.remove('up');
+            playWrong();
+            document.body.style.backgroundColor = '#ffe0e0';
+            setTimeout(()=>document.body.style.backgroundColor='', 200);
+            
+            if(this.lives <= 0){
+              // Reset level, keep score
+              this.lives = 3;
+              document.getElementById('whack-lives').textContent = '3';
+              // Clear all active animals
+              document.querySelectorAll('.whack-hole .animal.up').forEach(a=>a.classList.remove('up'));
+            }
+          } else {
+            // Correct hit!
+            playCorrect();
+            this.score++;
+            document.getElementById('whack-score').textContent = this.score;
+            animal.classList.remove('up');
+            initParticles();
+            
+            if(this.score >= this.data.targetScore){
+              this.animating = true;
+              if(this.activeTimer) clearInterval(this.activeTimer);
+              document.querySelectorAll('.whack-hole .animal').forEach(a=>a.classList.add('up'));
+              setTimeout(()=>{
+                updateEnergy(energyValue+1);
+                if(currentLevel<maxLevel){
+                  currentLevel++;
+                  loadLevel(currentGame, currentLevel);
+                } else {
+                  spawnConfetti(120);
+                  setTimeout(()=>{showHome();},3000);
+                }
+                this.animating = false;
+              }, 1500);
+            }
+          }
+        } else {
+          // Clicked empty hole
+          hole.style.animation = 'shake 0.2s';
+          setTimeout(()=>hole.style.animation='', 200);
+        }
+      });
+    });
+    
+    // Start spawning
+    this.startSpawning();
+  },
+  
+  startSpawning() {
+    const d = this.data;
+    if(this.activeTimer) clearInterval(this.activeTimer);
+    
+    function spawn() {
+      if(this.animating) return;
+      const holes = document.querySelectorAll('.whack-hole');
+      const active = document.querySelector('.whack-hole .animal.up');
+      if(active) {
+        // Clear previous
+        active.classList.remove('up');
+      }
+      
+      const idx = Math.floor(Math.random()*d.holes);
+      const hole = holes[idx];
+      if(!hole) return;
+      const animal = hole.querySelector('.animal');
+      
+      const animals = ['🐹','🐰','🐱','🐶','🐸'];
+      if(d.hasBomb && Math.random()<0.2){
+        animal.textContent = '💣';
+        animal.classList.add('bomb');
+      } else {
+        animal.textContent = animals[Math.floor(Math.random()*animals.length)];
+        animal.classList.remove('bomb');
+      }
+      animal.classList.add('up');
+      
+      setTimeout(()=>{
+        animal.classList.remove('up');
+      }, d.stayTime);
+    }
+    
+    this.activeTimer = setInterval(spawn.bind(this), Math.max(d.stayTime+500, 1500));
+    // Spawn first one quickly
+    setTimeout(spawn.bind(this), 500);
+  },
+  
+  getHintTarget() {
+    return document.querySelector('.whack-hole .animal.up:not(.bomb)');
+  }
+};
+
+// ====================== GAME 8: Pattern Detective ======================
+const GAME8 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  
+  getLevelParams(level) {
+    let pattern, options, correctIdx;
+    const colors = ['🔴','🔵','🟡','🟢','🟣','🟠'];
+    const shapes = ['●','■','▲','★','♦','♥'];
+    
+    if(level<=4) {
+      // ABAB
+      const a=colors[Math.floor(Math.random()*3)];
+      let b=colors[Math.floor(Math.random()*3+2)];
+      pattern=[a,b,a,b,'❓'];
+      correctIdx=3; // index of ? in pattern
+      options=[a,b,colors[Math.floor(Math.random()*5)]];
+    } else if(level<=9) {
+      // ABCABC
+      const a=colors[0], b=colors[1], c=colors[2];
+      pattern=[a,b,c,a,b,'❓'];
+      correctIdx=5;
+      const all=[a,b,c];
+      options=[...all];
+      while(options.length<4){
+        const r=colors[Math.floor(Math.random()*colors.length)];
+        if(!options.includes(r)) options.push(r);
+      }
+    } else if(level<=15) {
+      // AABBAABB
+      const a=colors[0], b=colors[1];
+      pattern=[a,a,b,b,a,a,'❓'];
+      correctIdx=6;
+      options=[a,b,colors[2],colors[3],colors[4]];
+    } else {
+      // Double attribute
+      const aColor=colors[0], bColor=colors[1];
+      const aShape=shapes[0], bShape=shapes[1];
+      pattern=[aColor+aShape, bColor+bShape, aColor+aShape, bColor+bShape, aColor+aShape, '❓'];
+      correctIdx=5;
+      options=[bColor+bShape, aColor+aShape, aColor+bShape, bColor+aShape, colors[2]+shapes[0], colors[3]+shapes[1]];
+    }
+    
+    // Shuffle options
+    for(let i=options.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [options[i],options[j]]=[options[j],options[i]];
+    }
+    
+    return {pattern, options, correctValue:pattern[correctIdx-1]};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.animating = false;
+  },
+  
+  render() {
+    const d = this.data;
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="pattern-container">
+        <div class="pattern-sequence" id="pattern-seq"></div>
+        <div style="font-size:3vmin;color:#999">❓</div>
+        <div class="pattern-options" id="pattern-options"></div>
+      </div>
+    `;
+    
+    const seq = document.getElementById('pattern-seq');
+    d.pattern.forEach((item, i)=>{
+      const el = document.createElement('div');
+      el.className = 'pattern-item';
+      if(item === '❓') {
+        el.classList.add('unknown');
+        el.textContent = '❓';
+        el.dataset.slot = i;
+      } else {
+        el.textContent = item;
+      }
+      seq.appendChild(el);
+    });
+    
+    const opts = document.getElementById('pattern-options');
+    d.options.forEach((item, i)=>{
+      const el = document.createElement('div');
+      el.className = 'option-btn';
+      el.dataset.value = item;
+      el.dataset.optIndex = i;
+      el.textContent = item;
+      el.style.width = '14vmin';
+      el.style.height = '14vmin';
+      el.style.fontSize = '7vmin';
+      opts.appendChild(el);
+    });
+  },
+  
+  bindEvents() {
+    document.querySelectorAll('#pattern-options .option-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(this.animating) return;
+        cancelHint();
+        this.checkResult(btn.dataset.value);
+      });
+    });
+  },
+  
+  checkResult(value) {
+    const d = this.data;
+    const expected = d.pattern[d.pattern.length-2]; // The value before ?
+    
+    // For simple patterns, the correct answer is the next logical one
+    let isCorrect = false;
+    if(d.pattern.length <= 6) {
+      // Simple ABAB or ABCABC
+      isCorrect = value === expected;
+    } else {
+      isCorrect = value === expected;
+    }
+    
+    if(isCorrect) {
+      this.animating = true;
+      playCorrect();
+      
+      // Fill in ? slot
+      const slot = document.querySelector('.pattern-item.unknown');
+      if(slot){
+        slot.textContent = value;
+        slot.classList.remove('unknown');
+        slot.classList.add('filled');
+      }
+      
+      // Flash all items
+      document.querySelectorAll('.pattern-item').forEach((el,i)=>{
+        setTimeout(()=>{
+          el.classList.add('highlight-flash');
+          setTimeout(()=>el.classList.remove('highlight-flash'), 500);
+        }, i*300);
+      });
+      
+      initParticles();
+      
+      setTimeout(()=>{
+        updateEnergy(energyValue+1);
+        if(currentLevel<maxLevel){
+          currentLevel++;
+          loadLevel(currentGame, currentLevel);
+        } else {
+          spawnConfetti(120);
+          setTimeout(()=>{showHome();},3000);
+        }
+        this.animating = false;
+      }, 2500);
+    } else {
+      playWrong();
+      const btn = [...document.querySelectorAll('#pattern-options .option-btn')].find(b => b.dataset.value === value);
+      if(btn){
+        btn.classList.add('shake');
+        btn.style.opacity = '0.5';
+        setTimeout(()=>{
+          btn.classList.remove('shake');
+          btn.style.opacity = '1';
+        }, 500);
+      }
+    }
+  },
+  
+  getHintTarget() {
+    return document.querySelector('#pattern-options .option-btn');
+  }
+};
+
+// ====================== GAME 9: Fruit Catch ======================
+const GAME9 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  fruits: [],
+  caught: 0,
+  panX: 0,
+  gameRunning: false,
+  animFrame: null,
+  
+  getLevelParams(level) {
+    let speed, count, hasBomb, target;
+    if(level<=4) { speed=2; count=1; hasBomb=false; target=5; }
+    else if(level<=9) { speed=3; count=2; hasBomb=true; target=8; }
+    else if(level<=15) { speed=4; count=2; hasBomb=true; target=12; }
+    else { speed=5; count=3; hasBomb=true; target=15; }
+    return {speed, count, hasBomb, target, fruitSize: level>15?30:40};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.fruits = [];
+    this.caught = 0;
+    this.panX = 40; // percentage
+    this.gameRunning = false;
+    if(this.animFrame) cancelAnimationFrame(this.animFrame);
+  },
+  
+  render() {
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="fruit-game" id="fruit-game">
+        <div class="fruit-score">🌈 <span id="fruit-score">0</span></div>
+        <div class="fruit-pan" id="fruit-pan" style="left:40%">🍳</div>
+      </div>
+    `;
+    this.panX = 40;
+    this.gameRunning = true;
+    this._lastSpawn = 0;
+  },
+  
+  bindEvents() {
+    const game = document.getElementById('fruit-game');
+    
+    game.addEventListener('touchmove', (e)=>{
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = game.getBoundingClientRect();
+      this.panX = ((touch.clientX - rect.left) / rect.width) * 100;
+      this.panX = Math.max(5, Math.min(95, this.panX));
+      document.getElementById('fruit-pan').style.left = this.panX + '%';
+    });
+    
+    game.addEventListener('mousemove', (e)=>{
+      if(e.buttons !== 1) return;
+      const rect = game.getBoundingClientRect();
+      this.panX = ((e.clientX - rect.left) / rect.width) * 100;
+      this.panX = Math.max(5, Math.min(95, this.panX));
+      document.getElementById('fruit-pan').style.left = this.panX + '%';
+    });
+    
+    this.gameLoop();
+  },
+  
+  gameLoop() {
+    if(!this.gameRunning || this.animating) {
+      this.animFrame = requestAnimationFrame(()=>this.gameLoop());
+      return;
+    }
+    
+    const d = this.data;
+    const game = document.getElementById('fruit-game');
+    if(!game) { this.gameRunning = false; return; }
+    
+    const now = Date.now();
+    
+    // Spawn new fruits
+    if(!this._lastSpawn) this._lastSpawn = now;
+    const spawnInterval = Math.max(500, 2000 - d.speed * 200);
+    if(now - this._lastSpawn > spawnInterval && this.fruits.length < d.count * 2) {
+      this._lastSpawn = now;
+      const fruitEmojis = ['🍎','🍊','🍋','🍇','🍉','🍓','🍑','🍒'];
+      const isBomb = d.hasBomb && Math.random() < 0.15;
+      this.fruits.push({
+        x: Math.random() * 80 + 10,
+        y: -5,
+        speed: d.speed + Math.random() * 0.5,
+        emoji: isBomb ? '💣' : fruitEmojis[Math.floor(Math.random()*fruitEmojis.length)],
+        isBomb,
+        wobble: Math.random() * Math.PI * 2,
+        wobbleSpeed: Math.random() * 0.05 + 0.02,
+        el: null
+      });
+    }
+    
+    // Update & render fruits
+    const gameHeight = game.offsetHeight;
+    const gameWidth = game.offsetWidth;
+    
+    // Remove old fruit DOM elements
+    document.querySelectorAll('.fruit-item').forEach(el=>{
+      if(!this.fruits.find(f=>f.el===el)) el.remove();
+    });
+    
+    this.fruits.forEach(f => {
+      f.y += f.speed * (gameHeight / 1000);
+      f.wobble += f.wobbleSpeed;
+      f.x += Math.sin(f.wobble) * 0.3;
+      
+      if(!f.el) {
+        f.el = document.createElement('div');
+        f.el.className = 'fruit-item' + (f.isBomb?' fruit-bomb':'');
+        f.el.textContent = f.emoji;
+        game.appendChild(f.el);
+      }
+      
+      const panWidth = gameWidth * 0.25;
+      const panTop = gameHeight - gameHeight * 0.1;
+      const fx = (f.x / 100) * gameWidth;
+      const fy = (f.y / 100) * gameHeight;
+      const panLeft = (this.panX / 100) * gameWidth;
+      
+      f.el.style.left = f.x + '%';
+      f.el.style.top = f.y + '%';
+      f.el.style.fontSize = (d.fruitSize/40*7)+'vmin';
+      
+      // Collision check with pan
+      if(fy > panTop - 20 && fy < panTop + 20 && fx > panLeft - panWidth/2 && fx < panLeft + panWidth/2) {
+        if(f.isBomb) {
+          // Hit bomb
+          this.fruits = this.fruits.filter(f2 => f2 !== f);
+          if(f.el) f.el.remove();
+          document.body.style.backgroundColor = '#ffe0e0';
+          setTimeout(()=>document.body.style.backgroundColor='', 200);
+          playWrong();
+          this.caught = Math.max(0, this.caught - 1);
+          document.getElementById('fruit-score').textContent = this.caught;
+        } else {
+          // Caught!
+          this.fruits = this.fruits.filter(f2 => f2 !== f);
+          if(f.el) f.el.remove();
+          this.caught++;
+          document.getElementById('fruit-score').textContent = this.caught;
+          playCorrect();
+          
+          // Juice splash - use particle
+          initParticles();
+          
+          if(this.caught >= d.target) {
+            this.animating = true;
+            this.gameRunning = false;
+            // Clear remaining fruits
+            this.fruits.forEach(f2 => { if(f2.el) f2.el.remove(); });
+            this.fruits = [];
+            
+            setTimeout(()=>{
+              updateEnergy(energyValue+1);
+              document.querySelectorAll('.fruit-item').forEach(el=>el.remove());
+              if(currentLevel<maxLevel) {
+                currentLevel++;
+                loadLevel(currentGame, currentLevel);
+              } else {
+                spawnConfetti(120);
+                setTimeout(()=>showHome(), 3000);
+              }
+              this.animating = false;
+            }, 1500);
+          }
+        }
+      }
+      
+      // Remove if off screen
+      if(f.y > 110) {
+        this.fruits = this.fruits.filter(f2 => f2 !== f);
+        if(f.el) f.el.remove();
+      }
+    });
+    
+    this.animFrame = requestAnimationFrame(()=>this.gameLoop());
+  },
+  
+  getHintTarget() {
+    return document.getElementById('fruit-pan');
+  }
+};
+
+// ====================== GAME 10: Listen and Find ======================
+const GAME10 = {
+  totalLevels: 20,
+  data: null,
+  animating: false,
+  
+  getLevelParams(level) {
+    let options;
+    const animals = ['🐱','🐶','🐮','🐑','🐔','🦆','🐷','🦁','🐘','🐰','🐸','🦊','🐺','🦒','🐧','🦉','🐢','🐟'];
+    
+    if(level<=4) { options=3; }
+    else if(level<=9) { options=4; }
+    else if(level<=15) { options=5; }
+    else { options=6; }
+    
+    const correct = animals[Math.floor(Math.random()*animals.length)];
+    let choices = [correct];
+    let used = new Set([correct]);
+    let pool = animals.filter(a=>!used.has(a));
+    
+    // For harder levels, pick similar-sounding animals
+    if(level > 9) {
+      const similarPairs = {'🐱':['🐰'],'🐶':['🐺','🦊'],'🐮':['🐘','🦒'],'🐑':['🦌'],'🦆':['🦢'],'🐔':['🦉']};
+      const similar = similarPairs[correct] || [];
+      for(let s of similar) if(!used.has(s) && choices.length<options) { choices.push(s); used.add(s); }
+    }
+    
+    while(choices.length < options && pool.length > 0){
+      const idx = Math.floor(Math.random()*pool.length);
+      choices.push(pool[idx]);
+      used.add(pool[idx]);
+      pool.splice(idx,1);
+    }
+    
+    // Shuffle
+    for(let i=choices.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [choices[i],choices[j]]=[choices[j],choices[i]];
+    }
+    
+    const correctIdx = choices.indexOf(correct);
+    
+    return {choices, correctIdx, correct, errCount:0};
+  },
+  
+  init(level) {
+    this.data = this.getLevelParams(level);
+    this.animating = false;
+    this.data.errCount = 0;
+  },
+  
+  render() {
+    const d = this.data;
+    const area = document.getElementById('game-area');
+    area.innerHTML = `
+      <div class="listen-container">
+        <div class="listen-speaker" id="listen-speaker">
+          <div class="sound-wave"></div>
+          <div class="sound-wave"></div>
+          <div class="sound-wave"></div>
+          <span id="speaker-icon">❓</span>
+        </div>
+        <div class="replay-btn" id="replay-btn">🔊</div>
+        <div class="listen-animals" id="listen-animals"></div>
+      </div>
+    `;
+    
+    const container = document.getElementById('listen-animals');
+    d.choices.forEach((animal,i)=>{
+      const el = document.createElement('div');
+      el.className = 'option-btn';
+      el.dataset.index = i;
+      el.dataset.animal = animal;
+      el.textContent = animal;
+      el.style.width = '18vmin';
+      el.style.height = '18vmin';
+      el.style.fontSize = '9vmin';
+      container.appendChild(el);
+    });
+    
+    // Play the sound
+    setTimeout(()=>this.playQuestion(), 500);
+  },
+  
+  playQuestion() {
+    const speaker = document.getElementById('speaker-icon');
+    if(speaker) speaker.textContent = '🔊';
+    const d = this.data;
+    playAnimalSound(d.correct, 0.6);
+    setTimeout(()=>{
+      if(speaker) speaker.textContent = '❓';
+    }, 800);
+  },
+  
+  bindEvents() {
+    document.querySelectorAll('#listen-animals .option-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(this.animating) return;
+        cancelHint();
+        this.checkResult(parseInt(btn.dataset.index));
+      });
+    });
+    
+    document.getElementById('replay-btn').addEventListener('click', ()=>{
+      if(this.animating) return;
+      this.playQuestion();
+    });
+  },
+  
+  checkResult(index) {
+    const d = this.data;
+    if(index === d.correctIdx) {
+      this.animating = true;
+      playCorrect();
+      
+      const el = document.querySelector(`#listen-animals .option-btn[data-index="${index}"]`);
+      el.classList.add('correct');
+      
+      // Show correct animal
+      document.querySelectorAll('#listen-animals .option-btn').forEach(btn => {
+        if(parseInt(btn.dataset.index) !== d.correctIdx) {
+          btn.style.opacity = '0.3';
+        }
+      });
+      
+      const speaker = document.getElementById('speaker-icon');
+      if(speaker) speaker.textContent = d.correct;
+      
+      // Star sparkle
+      const stars = ['✨','⭐','🌟'];
+      for(let i=0;i<5;i++){
+        const star = document.createElement('div');
+        star.className = 'star-particle';
+        star.textContent = stars[i%3];
+        star.style.left = (40 + Math.random()*20)+'%';
+        star.style.top = (40 + Math.random()*20)+'%';
+        document.querySelector('.listen-container').appendChild(star);
+        setTimeout(()=>star.remove(), 2000);
+      }
+      
+      initParticles();
+      
+      setTimeout(()=>{
+        updateEnergy(energyValue+1);
+        if(currentLevel<maxLevel) {
+          currentLevel++;
+          loadLevel(currentGame, currentLevel);
+        } else {
+          spawnConfetti(120);
+          setTimeout(()=>{showHome();},3000);
+        }
+        this.animating = false;
+      }, 2000);
+    } else {
+      d.errCount++;
+      playWrong();
+      const el = document.querySelector(`#listen-animals .option-btn[data-index="${index}"]`);
+      el.classList.add('shake');
+      setTimeout(()=>el.classList.remove('shake'), 400);
+      
+      // Auto replay after 3 errors
+      if(d.errCount >= 3) {
+        d.errCount = 0;
+        setTimeout(()=>this.playQuestion(), 600);
+      }
+    }
+  },
+  
+  getHintTarget() {
+    return document.querySelector('#listen-animals .option-btn');
+  }
+};
+
+// ====================== GAMES REGISTRY ======================
+const GAMES = [
+  {name:'颜色分类', icon:'🎨', stars:3, game:GAME1},
+  {name:'影子配对', icon:'👤', stars:3, game:GAME2},
+  {name:'记忆翻牌', icon:'🃏', stars:4, game:GAME3},
+  {name:'找不同', icon:'🔍', stars:4, game:GAME4},
+  {name:'走迷宫', icon:'🧩', stars:4, game:GAME5},
+  {name:'形状拼图', icon:'🔷', stars:4, game:GAME6},
+  {name:'打地鼠', icon:'🐹', stars:3, game:GAME7},
+  {name:'找规律', icon:'🧮', stars:4, game:GAME8},
+  {name:'接水果', icon:'🍎', stars:3, game:GAME9},
+  {name:'听声音', icon:'🔊', stars:5, game:GAME10},
+];
+
+// ====================== HOME SCREEN ======================
+function buildHome() {
+  const grid = document.getElementById('home-grid');
+  grid.innerHTML = '';
+  GAMES.forEach((g, i) => {
+    const card = document.createElement('div');
+    card.className = 'game-card fly-in';
+    card.style.animationDelay = (i*0.05)+'s';
+    card.innerHTML = `
+      <div class="num">${i+1}</div>
+      <div class="icon">${g.icon}</div>
+      <div class="stars">${'⭐'.repeat(g.stars)}</div>
+    `;
+    card.addEventListener('click', ()=>{
+      transitionToGame(i+1, 1);
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ====================== NAVIGATION ======================
+document.getElementById('btn-back').addEventListener('click', ()=>{
+  // Stop any running game
+  if(GAMES[currentGame-1] && GAMES[currentGame-1].game) {
+    const g = GAMES[currentGame-1].game;
+    if(g.activeTimer) clearInterval(g.activeTimer);
+    if(g.animFrame) cancelAnimationFrame(g.animFrame);
+    g.gameRunning = false;
+  }
+  cancelHint();
+  showHome();
+});
+
+// ====================== INIT ======================
+window.addEventListener('load', ()=>{
+  buildHome();
+  // Handle orientation/resize
+  window.addEventListener('resize', ()=>{
+    pCanvas.width = window.innerWidth;
+    pCanvas.height = window.innerHeight;
+  });
+  // Unlock audio on first touch
+  document.addEventListener('touchstart', ()=>{
+    getAudioCtx();
+  }, {once: true});
+  document.addEventListener('click', ()=>{
+    getAudioCtx();
+  }, {once: true});
+});
+</script>
+</body>
+</html>

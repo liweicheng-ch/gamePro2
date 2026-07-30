@@ -1,0 +1,4 @@
+com/gameforkids/MainActivity.java
+ com.gameforkids.MainActivity
+com/gameforkids/BuildConfig.java
+ com.gameforkids.BuildConfig
