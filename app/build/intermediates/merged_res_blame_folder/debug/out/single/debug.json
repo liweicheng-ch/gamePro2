@@ -1,14 +1,14 @@
 [
     {
-        "merged": "F:\\code\\gameForKids\\android\\app\\build\\intermediates\\res\\merged\\debug\\layout_activity_main.xml.flat",
-        "source": "F:\\code\\gameForKids\\android\\app\\src\\main\\res\\layout\\activity_main.xml"
+        "merged": "E:\\code\\myAiPro\\gamePro2\\app\\build\\intermediates\\res\\merged\\debug\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "E:\\code\\myAiPro\\gamePro2\\app\\src\\main\\res\\drawable\\ic_launcher_foreground.xml"
     },
     {
-        "merged": "F:\\code\\gameForKids\\android\\app\\build\\intermediates\\res\\merged\\debug\\mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "F:\\code\\gameForKids\\android\\app\\src\\main\\res\\mipmap-anydpi-v26\\ic_launcher.xml"
+        "merged": "E:\\code\\myAiPro\\gamePro2\\app\\build\\intermediates\\res\\merged\\debug\\layout_activity_main.xml.flat",
+        "source": "E:\\code\\myAiPro\\gamePro2\\app\\src\\main\\res\\layout\\activity_main.xml"
     },
     {
-        "merged": "F:\\code\\gameForKids\\android\\app\\build\\intermediates\\res\\merged\\debug\\drawable_ic_launcher_foreground.xml.flat",
-        "source": "F:\\code\\gameForKids\\android\\app\\src\\main\\res\\drawable\\ic_launcher_foreground.xml"
+        "merged": "E:\\code\\myAiPro\\gamePro2\\app\\build\\intermediates\\res\\merged\\debug\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "E:\\code\\myAiPro\\gamePro2\\app\\src\\main\\res\\mipmap-anydpi-v26\\ic_launcher.xml"
     }
 ]
